@@ -1,31 +1,21 @@
 import axios from 'axios';
-
+import {ermittlungStarten} from './leistungsermittlung.js';
 import express from 'express';
 
 //Deklaration des Express-Servers
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+const miner = [23,24,25,26,27];
 
-
-app.post('/sonne', (req, res) => {
-    const watt = req.body.watt;
-    switch(watt) {
-        case 500:
-            console.log('Starte Leistungswert ermittlung für Miner 1');
-            
-            break;
-        case 1000:
-            console.log('1000 Watt');
-            break;
-        case 1500:
-            console.log('1500 Watt');
-            break;
-        case 2000:
-            console.log('2000 Watt');
-            break;
-        case 2500:
-            console.log('2500 Watt');
-            break;
-}
+app.post('/sonne', async (req, res) => {
+    const {watt} = req.body;
+    let anzahlMiner = watt / 500;
+    console.log(watt);
+    console.log(Math.floor(anzahlMiner), 'Miner werden jetzt gestartet');
+    for (let i = 0; i < Math.floor(anzahlMiner); i++) {
+       await ermittlungStarten(miner[i]);
+    } 
     res.send('Leistungswert ermittlung gestartet');});
 
 

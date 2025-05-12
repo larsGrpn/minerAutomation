@@ -1,9 +1,5 @@
 import axios from "axios";
 
-axios.get('http://localhost:3000')
-.then(response => {
-    console.log(response.data);
+axios.post('http://localhost:3000/sonne', {
+    watt: 1300
 })
-.catch(error => {
-    console.log(error);
-});
