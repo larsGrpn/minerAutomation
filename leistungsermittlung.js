@@ -1,19 +1,28 @@
 // Importiere das axios Modul für HTTP-Anfragen
 import axios from "axios";
+import dotenv from "dotenv";
+import https from "https";
+import { insertMinerwerte } from "./database.js";
+
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+});
+
+dotenv.config(); // Lade Umgebungsvariablen aus der .env-Datei
 
 // Boolesche Variable, die anzeigen könnte, ob die Sonne verfügbar ist (hier auf false gesetzt)
 const sonne = false;
 
 // Authentifizierungstoken für API-Zugriffe
-const token = "5b281acc-de86-41bb-b14d-e266d9c9edbd";
+const token = process.env.TOKEN;
 
 // Deklaration bzw. Definition der IP-Adressen der Miner
 // (Die konkreten IP-Adressen werden hier nicht angegeben)
 
 // Variablendefinitionen mit Anfangswerten
 
-const maximaleLeistung = 2000; // Maximale Leistung, die erreicht werden soll
-const maximaleSpannung = 1000; // Maximale Spannung, die erreicht werden soll
+const maximaleLeistung = 0; // Maximale Leistung, die erreicht werden soll
+const maximaleSpannung = 0; // Maximale Spannung, die erreicht werden soll
 
 // Schrittweiten für die Erhöhung von Leistung und Spannung
 const leistungsschritt = 100; // Erhöhung der Leistung pro Schritt
@@ -28,15 +37,17 @@ async function timeout(ms) {
 // Funktion für die Abfrage der Hashrate eines Miners
 function hashrateAbfragen(minerID){
     // Sende eine GET-Anfrage an die API des Miners, um die Hashrate zu erhalten
-    axios.get(`https://10.10.0.${minerID}/api/hashrate`, {
-        headers: {
-            'Authorization': `Bearer ${token}` // Übergabe des Authentifizierungstokens
-        }
-    })
+    axios.get(`https://10.10.0.24/api/timeseries?series=hashrate`, {
+      headers: {
+          'Authorization': `Bearer ${token}`
+      },
+      httpsAgent: httpsAgent // Verwendung des HTTPS-Agenten, um unsichere Zertifikate zu akzeptieren
+  })
     .then(response => {
         // Extrahiere die Hashrate aus der Response und gebe sie aus
-        let hashrate = response.data.hashrate;
-        console.log(`Hashrate für Miner ${minerID}: ${hashrate}`);
+        const data = response.data;
+    let hashrate = data.series[data.series.length - 1];
+    console.log(`Hashrate für Miner 1: ${hashrate}`);
     })
     .catch(error => {
         // Fehlerbehandlung: Ausgabe einer Fehlermeldung, falls die Anfrage fehlschlägt
@@ -49,22 +60,22 @@ function hashrateAbfragen(minerID){
 // Funktion zum Einstellen der Parameter (Leistung und Spannung) eines Miners
 function parameterEinstellen(minerID, leistung, volt){
     // Sende eine POST-Anfrage, um den Leistungswert (offset) zu aktualisieren
-    axios.post(`https://10.10.0.${minerID}/api/clock/update`, {
+    axios.get(`https://10.10.0.${minerID}/api/clock/update`,
+      {
+        params: {offset: leistung}, 
         headers:{
             'Authorization': `Bearer ${token}`,  // Authentifizierung via Token
         },
-        body:{
-            'offset' : leistung,  // Übergabe des neuen Leistungswertes
-        }
+        httpsAgent: httpsAgent, // Verwendung des HTTPS-Agenten, um unsichere Zertifikate zu akzeptieren
+        
     });
     // Sende eine POST-Anfrage, um den Spannungswert (offset) zu aktualisieren
-    axios.post(`https://10.10.0.${minerID}/api/voltage/update`, {
+    axios.post(`https://10.10.0.${minerID}/api/voltage/update`,
+      {params: {offset: volt}, 
         headers:{
             'Authorization': `Bearer ${token}`,  // Authentifizierung via Token
         },
-        body:{
-            'offset' : volt,  // Übergabe des neuen Spannungswertes
-        }
+        httpsAgent: httpsAgent, // Verwendung des HTTPS-Agenten, um unsichere Zertifikate zu akzeptieren
     });
     return;
 }
@@ -89,7 +100,7 @@ export async function ermittlungStarten(minerID) {
   // Schleife: Erhöhe Leistung und Spannung solange, bis eines der Maximalwerte erreicht ist
   while (leistung < maximaleLeistung && volt < maximaleSpannung) {
     // Warte 360000 ms (6 Minuten)
-    await timeout(360000);
+    await timeout(30000);
 
     // Frage die aktuelle Hashrate des Miners ab
     momentaneHashrate = hashrateAbfragen(minerID);
@@ -132,5 +143,11 @@ export async function ermittlungStarten(minerID) {
   console.log(`Leistungswert ermittlung für Miner ${minerID} beendet`);
 
   // Rückgabe des Datensatzes mit dem optimalen Hashrate/Leistung-Verhältnis
-  return datenerfassung[größterIndex];
+  insertMinerwerte(
+    minerID,
+    datenerfassung[größterIndex][0],
+    datenerfassung[größterIndex][1],
+    datenerfassung[größterIndex][2],
+    true
+  );
 }
