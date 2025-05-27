@@ -1,7 +1,7 @@
 import axios from 'axios';
-import {ermittlungStarten} from './leistungsermittlung.js';
+import {ermittlungStarten, parameterEinstellen} from './leistungsermittlung.js';
 import express from 'express';
-import { checkIfMinerAlreadyTested, getLeistung, getVoltage } from './database.js';
+import { checkIfMinerAlreadyTested, getLeistung, getMinerWerte, getVoltage } from './database.js';
 import { get } from 'http';
 
 //Deklaration des Express-Servers
@@ -13,23 +13,30 @@ app.use(express.static('public'));
 const miner = [23,24,25,26,27];
 let aktiveErmittlung= [23,25];
 
-
+const minerStarten = (minerIndex) => {
+    console.log('Miner ' + minerIndex + ' wird gestartet');
+    const minerWerte = getMinerWerte(minerIndex);
+    parameterEinstellen(minerWerte.id, minerWerte.leistung, minerWerte.volt);
+    console.log('Miner ' + minerIndex + ' wurde gestartet');
+}   
 
 const TaskManager = (anzahlMiner) => {
     let kapazität = anzahlMiner;
     let minerIndex = 0;
     while (kapazität > 0) {
         if (!aktiveErmittlung.includes(miner[minerIndex])){
-            aktiveErmittlung.push(miner[minerIndex]);
-            console.log('Miner ' + miner[minerIndex] + ' wird gestartet');
+            
             if(checkIfMinerAlreadyTested(miner[minerIndex])){
                 console.log('Miner ' + miner[minerIndex] + ' wurde bereits getestet');
-                return
+                minerStarten(minerIndex);
                 minerIndex++;
-                continue;
+            }else {
+                aktiveErmittlung.push(miner[minerIndex]);
+                console.log('Miner ' + miner[minerIndex] + ' wird gestartet');
+                ermittlungStarten(miner[minerIndex]);
+                kapazität--;
             }
-            ermittlungStarten(miner[minerIndex]);
-            kapazität--;
+            
         }else {
             console.log('Miner ' + miner[minerIndex] + ' ist bereits aktiv');
             minerIndex++;

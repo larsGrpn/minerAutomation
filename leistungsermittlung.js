@@ -58,7 +58,7 @@ function hashrateAbfragen(minerID){
 }
 
 // Funktion zum Einstellen der Parameter (Leistung und Spannung) eines Miners
-function parameterEinstellen(minerID, leistung, volt){
+export function parameterEinstellen(minerID, leistung, volt){
     // Sende eine POST-Anfrage, um den Leistungswert (offset) zu aktualisieren
     axios.get(`https://10.10.0.${minerID}/api/clock/update`,
       {
