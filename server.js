@@ -112,8 +112,8 @@ app.get('/', async (req, res) => {
 
 
 
-app.listen(1337, () => {
-    console.log('The Api-Server is running on port 3000');
+app.listen(1443, () => {
+    console.log('The Api-Server is running on port 1443');
 })
 
 
