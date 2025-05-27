@@ -68,6 +68,17 @@ app.post('/sonne', async (req, res) => {
     res.send('Leistungswert ermittlung gestartet');
 });
 
+app.post('/stop', async (req, res) => {
+    parameterEinstellen(23, 0, 0);
+    parameterEinstellen(24, 0, 0);
+    parameterEinstellen(25, 0, 0);
+    parameterEinstellen(26, 0, 0);
+    parameterEinstellen(27, 0, 0);
+    aktiveErmittlung = [];
+    console.log('Alle Miner wurden gestoppt');
+    res.send('Alle Miner wurden gestoppt');
+});
+
 app.get('/', async (req, res) => {
     try{
     const promises = {
