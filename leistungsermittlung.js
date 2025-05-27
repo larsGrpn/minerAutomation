@@ -21,12 +21,12 @@ const token = process.env.TOKEN;
 
 // Variablendefinitionen mit Anfangswerten
 
-const maximaleLeistung = 0; // Maximale Leistung, die erreicht werden soll
-const maximaleSpannung = 0; // Maximale Spannung, die erreicht werden soll
+const maximaleLeistung = 150; // Maximale Leistung, die erreicht werden soll
+const maximaleSpannung = 75; // Maximale Spannung, die erreicht werden soll
 
 // Schrittweiten für die Erhöhung von Leistung und Spannung
-const leistungsschritt = 100; // Erhöhung der Leistung pro Schritt
-const voltschritt = 10; // Erhöhung der Spannung pro Schritt
+const leistungsschritt = 5; // Erhöhung der Leistung pro Schritt
+const voltschritt = 2; // Erhöhung der Spannung pro Schritt
 
 // Funktion, um eine Verzögerung zu erzielen (als Promise)
 // ms: Zeit in Millisekunden
@@ -87,9 +87,9 @@ export async function ermittlungStarten(minerID) {
   let momentaneHashrate = 0;
   let hashrate = 0; // Aktuelle Hashrate (wird später aktualisiert)
 
-  let größterIndex = 0; // Index des besten Datensatzes
+  let größterIndex = 0; //, sonne Index des besten Datensatzes
   // Array zur Datenerfassung; initial mit den Startwerten (Achtung: "Leistung" und "hashrate" müssten definiert sein)
-  let datenerfassung = [leistung, volt, hashrate, hashrate / leistung];
+  let datenerfassung = [leistung, volt, hashrate];
 
   // Ausgabe, dass die Leistungswert-Ermittlung gestartet wird
   console.log(`Starte Leistungswert ermittlung für Miner ${minerID}`);
@@ -105,11 +105,8 @@ export async function ermittlungStarten(minerID) {
     // Frage die aktuelle Hashrate des Miners ab
     momentaneHashrate = hashrateAbfragen(minerID);
 
-    // Berechne das Verhältnis von Hashrate zu Leistung (Hashrate pro Watt)
-    let hashProWatt = momentaneHashrate / leistung;
-
     // Erstelle einen Datensatz mit den aktuellen Werten
-    let datensatz = [leistung, volt, momentaneHashrate, hashProWatt];
+    let datensatz = [leistung, volt, momentaneHashrate];
 
     // Ausgabe der aktuellen Parameter im Log
     console.log(
@@ -131,11 +128,11 @@ export async function ermittlungStarten(minerID) {
   größterIndex = 0;
 
   // Sortiere die erfassten Datensätze nach dem Verhältnis (Hashrate pro Watt)
-  datenerfassung.sort((a, b) => a[3] - b[3]);
+  datenerfassung.sort((a, b) => a[2] - b[2]);
 
   // Durchsuche das Array, um den Datensatz mit dem höchsten Verhältnis zu finden
   for (let i = 0; i < datenerfassung.length; i++) {
-    if (datenerfassung[i][3] > datenerfassung[größterIndex][3]) {
+    if (datenerfassung[i][2] > datenerfassung[größterIndex][2]) {
       größterIndex = i;
     }
   }

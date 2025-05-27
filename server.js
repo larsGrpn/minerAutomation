@@ -10,8 +10,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
-const miner = [23,24,25,26,27];
-let aktiveErmittlung= [23,25];
+const miner = [22,23,24,25];
+let aktiveErmittlung= [];
 
 const minerStarten = (minerIndex) => {
     console.log('Miner ' + minerIndex + ' wird gestartet');
@@ -69,11 +69,11 @@ app.post('/sonne', async (req, res) => {
 });
 
 app.post('/stop', async (req, res) => {
-    parameterEinstellen(23, 0, 0);
-    parameterEinstellen(24, 0, 0);
-    parameterEinstellen(25, 0, 0);
-    parameterEinstellen(26, 0, 0);
-    parameterEinstellen(27, 0, 0);
+    miner.forEach((minerIndex) => {
+        parameterEinstellen(minerIndex, 0, 0);
+    });
+    console.log('Alle Miner wurden gestoppt');
+    // Leere das aktive Ermittlung Array
     aktiveErmittlung = [];
     console.log('Alle Miner wurden gestoppt');
     res.send('Alle Miner wurden gestoppt');
